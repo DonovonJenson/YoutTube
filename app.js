@@ -26,6 +26,8 @@ app.use(expressWinston.logger({
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
+
+//Route to return a list of videos based on search term
 app.get('/search/:term', (req, res) => {
 	//Possibly come back and parse down how much data is sent to client.
 	res.status(200);
@@ -51,6 +53,8 @@ app.get('/search/:term', (req, res) => {
 
 })
 
+
+//Route to return a specific video 
 app.get('/video/:id', (req, res) => {
 	//Sends back a single video based on the ID, should be sent after user picks specific video in client.
 	res.status(200);
@@ -76,7 +80,7 @@ app.get('/video/:id', (req, res) => {
 
 })
 
-
+//Consumer uses polling to check for new videos
 const findVideos = Consumer.create({
   queueUrl: 'https://sqs.us-west-2.amazonaws.com/867486098166/Uploads',
   handleMessage: (message, done) => {
@@ -98,18 +102,23 @@ findVideos.on('error', (err) => {
  
 findVideos.start();
 
-// app.get('newvideos', (req, res) =>{
-// 	//Still need to add ability to process body, then upload to elasticsearch.
-// 	res.status(200);
-// 	axios.get('getfromQueURl')
-// 	.then(function (response) {
-// 		console.log(response)
-// 	.catch(function (error) {
-// 	    console.log(error);
-// 	    res.send('Error');
-// 	});
+//End Consumer
+
+
+//Route for testing Elasticsearch writing
+// app.post('/dbWriteTestRoute', (req, res) => {
+// 	var video = JSON.stringify({"video_url_id":"Ks-_Mh1QhMc","snippet":{"publishedAt":"2017-12-20T09:24:56.000Z","channelId":"UCo7i93EtJhQub3SDKrtIAPA","title":"Rap 2018: Best Rap Songs 2018 (Top Trap Rap & Rap Music Playlist)","description":"\"Music can change the world because it can change people....","thumbnails":{"url":"https://i.ytimg.com/vi/4LfJnj66HVQ/default.jpg","width":120,"height":90},"channelTitle":"#RedMusic: HotMusicCharts","Tags":["Amy Cuddy","TED","TEDTalk","TEDTalks","TED Talk","TED Talks","TEDGlobal","brain","business","psychology","self","Success"],"categoryId":"22","duration":150,"statistics":{"viewCount":13403317,"likeCount":171513,"dislikeCount":3214,"favoriteCount":0,"commentCount":6692}}});
+// 	var inputVideo = JSON.parse(video)
+//    	client.index({  
+// 	  index: 'video',
+// 	  type: 'uploaded',
+// 	  body: inputVideo })
+// 	  res.send('Sent');
+
 // })
 
+
+//Route for new events from the client
 app.post('/clientEvent', (req, res) =>{
 	res.status(201);
 	var event = req.body;
@@ -123,14 +132,18 @@ var params = {
 sqs.sendMessage(params, function(err, data) {
   if (err) {
     console.log("Error", err);
+    res.send("Error");
   } else {
     console.log("Success", data.MessageId);
+    res.send("Success");
   }
 });
 
 
 })
 
+
+//Route for new videos uploaded from client
 app.post('/upload', (req, res) =>{
 	res.status(201);
 	var uploadObject = req.body;
@@ -152,5 +165,5 @@ app.post('/upload', (req, res) =>{
 
 })
 
-app.listen(3000, () => console.log('Example app listening on port 3000!'))
+app.listen(3000, () => console.log('listening on port 3000!'))
 
